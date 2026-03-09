@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { db } from '../db';
+import FintrackLogo from '../components/FintrackLogo';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -38,10 +39,15 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <p className="text-5xl mb-4">💸</p>
-          <h1 className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">Fintrack</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Personal Finance Tracker</p>
+        <div className="flex flex-col items-center gap-4">
+          <FintrackLogo size={56} showWordmark={false} />
+          <div className="text-center">
+            <p className="text-3xl" style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <span className="text-indigo-500 dark:text-indigo-400">fin</span>
+              <span className="text-slate-900 dark:text-white">track</span>
+            </p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Personal Finance Tracker</p>
+          </div>
         </div>
 
         <div className="card">
