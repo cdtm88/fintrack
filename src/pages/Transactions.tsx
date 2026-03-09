@@ -107,7 +107,7 @@ export default function Transactions() {
             <ArrowLeftRight size={15} /> <span className="hidden sm:inline">Transfer</span>
           </button>
           <button className="btn-primary flex items-center gap-1.5 whitespace-nowrap" onClick={() => { setEditTxn(undefined); setShowModal(true); }}>
-            <Plus size={16} /> <span className="hidden sm:inline">Add </span>Transaction
+            <Plus size={16} /><span className="hidden sm:inline"> Add Transaction</span>
           </button>
         </div>
       </div>
@@ -116,15 +116,15 @@ export default function Transactions() {
       <div className="grid grid-cols-3 gap-3">
         <div className="card py-3 text-center min-w-0">
           <p className="text-muted text-xs uppercase tracking-wide">Income</p>
-          <p className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm sm:text-base mt-0.5 tabular-nums truncate">+{totalIncome.toFixed(2)}</p>
+          <p className="text-emerald-600 dark:text-emerald-400 font-semibold text-xs sm:text-base mt-0.5 tabular-nums truncate">+{totalIncome.toFixed(2)}</p>
         </div>
         <div className="card py-3 text-center min-w-0">
           <p className="text-muted text-xs uppercase tracking-wide">Expenses</p>
-          <p className="text-red-600 dark:text-red-400 font-semibold text-sm sm:text-base mt-0.5 tabular-nums truncate">-{totalExpense.toFixed(2)}</p>
+          <p className="text-red-600 dark:text-red-400 font-semibold text-xs sm:text-base mt-0.5 tabular-nums truncate">-{totalExpense.toFixed(2)}</p>
         </div>
         <div className="card py-3 text-center min-w-0">
           <p className="text-muted text-xs uppercase tracking-wide">Net</p>
-          <p className={`font-semibold text-sm sm:text-base mt-0.5 tabular-nums truncate ${totalIncome - totalExpense >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className={`font-semibold text-xs sm:text-base mt-0.5 tabular-nums truncate ${totalIncome - totalExpense >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
             {(totalIncome - totalExpense).toFixed(2)}
           </p>
         </div>
@@ -249,17 +249,17 @@ export default function Transactions() {
                     </p>
                   </div>
 
-                  <span className={`text-sm font-semibold shrink-0 ${isTransfer ? 'text-slate-500 dark:text-slate-400' : t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                  <span className={`text-xs sm:text-sm font-semibold shrink-0 ${isTransfer ? 'text-slate-500 dark:text-slate-400' : t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                     {isTransfer ? '' : (t.type === 'income' ? '+' : '-')}{formatCurrency(t.amount, t.account?.currency ?? 'AED')}
                   </span>
 
                   <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                     {!isTransfer && (
-                      <button className="btn-ghost p-2" onClick={() => { setEditTxn(t); setShowModal(true); }}>
+                      <button className="btn-ghost p-1.5 sm:p-2" onClick={() => { setEditTxn(t); setShowModal(true); }}>
                         <Pencil size={13} />
                       </button>
                     )}
-                    <button className="btn-ghost p-2 hover:text-red-500" onClick={() => setDeleteTxn(t)}>
+                    <button className="btn-ghost p-1.5 sm:p-2 hover:text-red-500" onClick={() => setDeleteTxn(t)}>
                       <Trash2 size={13} />
                     </button>
                   </div>
