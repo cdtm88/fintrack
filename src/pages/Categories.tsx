@@ -52,13 +52,13 @@ export default function Categories() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="page-title">Categories</h1>
           <p className="page-subtitle">{categories.length} categor{categories.length !== 1 ? 'ies' : 'y'}</p>
         </div>
-        <button className="btn-primary flex items-center gap-2" onClick={() => { setEditCategory(undefined); setShowModal(true); }}>
-          <Plus size={16} /> New Category
+        <button className="btn-primary flex items-center gap-1.5 whitespace-nowrap shrink-0" onClick={() => { setEditCategory(undefined); setShowModal(true); }}>
+          <Plus size={16} /> <span className="hidden sm:inline">New </span>Category
         </button>
       </div>
 
@@ -118,7 +118,7 @@ export default function Categories() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button className="btn-ghost p-1.5" onClick={() => { setEditCategory(cat); setShowModal(true); }}>
                       <Pencil size={13} />
                     </button>

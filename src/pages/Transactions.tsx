@@ -90,41 +90,41 @@ export default function Transactions() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="page-title">Transactions</h1>
           <p className="page-subtitle">{filtered.length} transaction{filtered.length !== 1 ? 's' : ''}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           <button
-            className="btn-secondary flex items-center gap-2"
+            className="btn-secondary flex items-center gap-1.5 whitespace-nowrap"
             onClick={() => exportTransactionsCSV(filtered)}
             title="Export filtered transactions to CSV"
           >
-            <Download size={15} /> Export
+            <Download size={15} /> <span className="hidden sm:inline">Export</span>
           </button>
-          <button className="btn-secondary flex items-center gap-2" onClick={() => setShowTransferModal(true)}>
-            <ArrowLeftRight size={15} /> Transfer
+          <button className="btn-secondary flex items-center gap-1.5 whitespace-nowrap" onClick={() => setShowTransferModal(true)}>
+            <ArrowLeftRight size={15} /> <span className="hidden sm:inline">Transfer</span>
           </button>
-          <button className="btn-primary flex items-center gap-2" onClick={() => { setEditTxn(undefined); setShowModal(true); }}>
-            <Plus size={16} /> Add Transaction
+          <button className="btn-primary flex items-center gap-1.5 whitespace-nowrap" onClick={() => { setEditTxn(undefined); setShowModal(true); }}>
+            <Plus size={16} /> <span className="hidden sm:inline">Add </span>Transaction
           </button>
         </div>
       </div>
 
       {/* Summary bar */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="card py-3 text-center">
+        <div className="card py-3 text-center min-w-0">
           <p className="text-muted text-xs uppercase tracking-wide">Income</p>
-          <p className="text-emerald-600 dark:text-emerald-400 font-semibold text-lg mt-0.5">+{totalIncome.toFixed(2)}</p>
+          <p className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm sm:text-base mt-0.5 tabular-nums truncate">+{totalIncome.toFixed(2)}</p>
         </div>
-        <div className="card py-3 text-center">
+        <div className="card py-3 text-center min-w-0">
           <p className="text-muted text-xs uppercase tracking-wide">Expenses</p>
-          <p className="text-red-600 dark:text-red-400 font-semibold text-lg mt-0.5">-{totalExpense.toFixed(2)}</p>
+          <p className="text-red-600 dark:text-red-400 font-semibold text-sm sm:text-base mt-0.5 tabular-nums truncate">-{totalExpense.toFixed(2)}</p>
         </div>
-        <div className="card py-3 text-center">
+        <div className="card py-3 text-center min-w-0">
           <p className="text-muted text-xs uppercase tracking-wide">Net</p>
-          <p className={`font-semibold text-lg mt-0.5 ${totalIncome - totalExpense >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className={`font-semibold text-sm sm:text-base mt-0.5 tabular-nums truncate ${totalIncome - totalExpense >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
             {(totalIncome - totalExpense).toFixed(2)}
           </p>
         </div>
@@ -253,7 +253,7 @@ export default function Transactions() {
                     {isTransfer ? '' : (t.type === 'income' ? '+' : '-')}{formatCurrency(t.amount, t.account?.currency ?? 'AED')}
                   </span>
 
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                     {!isTransfer && (
                       <button className="btn-ghost p-2" onClick={() => { setEditTxn(t); setShowModal(true); }}>
                         <Pencil size={13} />

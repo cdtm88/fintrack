@@ -172,6 +172,7 @@ export default function TransferModal({ accounts, defaultToAccountId, onClose }:
               <input
                 className="input text-lg font-semibold"
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 min="0.01"
                 placeholder="0.00"
@@ -238,6 +239,7 @@ export default function TransferModal({ accounts, defaultToAccountId, onClose }:
                 <input
                   className="input"
                   type="number"
+                  inputMode="decimal"
                   step="0.01"
                   min="0"
                   placeholder="0.00"

@@ -48,7 +48,7 @@ export default function Layout() {
         <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
           <p className="text-xs text-muted truncate">{user.email ?? ''}</p>
           <div className="flex items-center justify-between">
-            <p className="text-slate-400 text-xs">v1.2.0</p>
+            <p className="text-slate-400 text-xs">v1.3.0</p>
             <button
               onClick={() => db.auth.signOut()}
               className="flex items-center gap-1.5 text-xs text-muted hover:text-red-500 transition-colors"

@@ -238,6 +238,7 @@ export default function HoldingModal({ holding, accounts, onClose }: Props) {
               <input
                 className="input"
                 type="number"
+                inputMode="decimal"
                 step="any"
                 min="0"
                 placeholder="10"
@@ -251,6 +252,7 @@ export default function HoldingModal({ holding, accounts, onClose }: Props) {
               <input
                 className="input"
                 type="number"
+                inputMode="decimal"
                 step="any"
                 min="0"
                 placeholder="150.00"
@@ -326,6 +328,7 @@ export default function HoldingModal({ holding, accounts, onClose }: Props) {
             <input
               className="input"
               type="number"
+              inputMode="decimal"
               step="any"
               min="0"
               placeholder="Enter price manually if auto-fetch isn't available"

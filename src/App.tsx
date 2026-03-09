@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { SettingsProvider } from './context/SettingsContext';
 import { UserProvider } from './context/UserContext';
@@ -19,9 +19,32 @@ function AuthenticatedApp({ user }: { user: { id: string; email?: string | null 
     () => !!localStorage.getItem(`fintrack_onboarded_${user.id}`)
   );
 
+  // Skip onboarding if the user already has accounts (e.g. new device / cleared storage)
+  const { data, isLoading } = db.useQuery(
+    !onboarded ? { accounts: { $: { where: { userId: user.id } } } } : null
+  );
+
+  useEffect(() => {
+    if (!onboarded && !isLoading && (data?.accounts?.length ?? 0) > 0) {
+      localStorage.setItem(`fintrack_onboarded_${user.id}`, '1');
+      setOnboarded(true);
+    }
+  }, [onboarded, isLoading, data, user.id]);
+
   function completeOnboarding() {
     localStorage.setItem(`fintrack_onboarded_${user.id}`, '1');
     setOnboarded(true);
+  }
+
+  if (!onboarded && isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="text-center space-y-3">
+          <div className="text-4xl">💸</div>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">Loading…</p>
+        </div>
+      </div>
+    );
   }
 
   return (

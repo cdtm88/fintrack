@@ -2,13 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import type { Holding } from '../types';
 
 const CACHE_KEY = 'fintrack_asset_prices';
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+const CACHE_TTL = 15 * 60 * 1000;      // 15 minutes — avoids redundant API calls
+const REFRESH_COOLDOWN = 60 * 1000;    // 60 seconds between manual refreshes
+const CONCURRENCY = 5;                  // max parallel Finnhub requests
 
-// Warm up the server-side Yahoo Finance crumb as soon as this module loads
-// (only in dev — the /api/yf-init endpoint only exists in dev mode)
-if (import.meta.env.DEV) {
-  fetch('/api/yf-init').catch(() => {});
-}
+// Set VITE_FINNHUB_KEY in your .env file (get a free key at finnhub.io)
+const FINNHUB_KEY = import.meta.env.VITE_FINNHUB_KEY ?? '';
 
 type PriceCache = Record<string, { price: number; timestamp: number }>;
 
@@ -50,18 +49,47 @@ async function fetchCryptoPrices(
   return res.json();
 }
 
+/** Fetch a single stock/ETF/fund quote from Finnhub.
+ *  Returns null on error or if no key is configured. */
 async function fetchStockPrice(symbol: string): Promise<number | null> {
+  if (!FINNHUB_KEY) return null;
   try {
-    // Use Vite proxy to avoid CORS restrictions from Yahoo Finance
     const res = await fetch(
-      `/api/yf/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`
+      `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`
     );
     if (!res.ok) return null;
     const data = await res.json();
-    return data?.chart?.result?.[0]?.meta?.regularMarketPrice ?? null;
+    // data.c = current price; 0 means market closed with no data
+    return typeof data.c === 'number' && data.c > 0 ? data.c : null;
   } catch {
     return null;
   }
+}
+
+/** Run async tasks with a bounded concurrency (Finnhub: 60 req/min free tier).
+ *  With CONCURRENCY = 5 and a 60-second manual-refresh cooldown, even a user
+ *  with 30 holdings only sends 30 requests per minute at most. */
+async function withConcurrencyLimit<T>(
+  tasks: (() => Promise<T>)[],
+  limit: number,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = new Array(tasks.length);
+  const executing = new Set<Promise<void>>();
+
+  for (let i = 0; i < tasks.length; i++) {
+    const idx = i;
+    const p = Promise.resolve()
+      .then(() => tasks[idx]())
+      .then(
+        val => { results[idx] = { status: 'fulfilled', value: val }; },
+        err => { results[idx] = { status: 'rejected', reason: err }; },
+      );
+    executing.add(p);
+    p.finally(() => executing.delete(p));
+    if (executing.size >= limit) await Promise.race(executing);
+  }
+  await Promise.all(executing);
+  return results;
 }
 
 export type PriceSource = 'live' | 'cache' | 'manual' | 'missing';
@@ -73,6 +101,18 @@ export function useAssetPrices(holdings: Holding[]) {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [, forceUpdate] = useState(0);
+
+  // Tick every second while a cooldown is active so the countdown stays live
+  useEffect(() => {
+    if (cooldownUntil <= Date.now()) return;
+    const id = setInterval(() => {
+      forceUpdate(n => n + 1);
+      if (Date.now() >= cooldownUntil) clearInterval(id);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [cooldownUntil]);
 
   // Stable ref so the effect always sees the latest holdings
   const holdingsRef = useRef(holdings);
@@ -99,7 +139,7 @@ export function useAssetPrices(holdings: Holding[]) {
       const srcMap: Record<string, PriceSource> = {};
       const isForced = refreshTick > 0;
 
-      // Pass 1: apply cache or manual prices
+      // Pass 1: serve from cache or manual price where possible
       for (const h of hs) {
         const key = h.priceId ?? h.symbol;
         const entry = cache[key];
@@ -136,12 +176,17 @@ export function useAssetPrices(holdings: Holding[]) {
         }
       }
 
-      // Pass 3: fetch stocks/ETFs/funds from Yahoo Finance
+      // Pass 3: fetch stocks/ETFs/funds from Finnhub with concurrency cap
       const stockNeeded = hs.filter(
         h => (h.assetType === 'stock' || h.assetType === 'etf' || h.assetType === 'fund') && result[h.id] == null
       );
-      await Promise.allSettled(
-        stockNeeded.map(async h => {
+
+      if (stockNeeded.length > 0 && !FINNHUB_KEY) {
+        setError('Set VITE_FINNHUB_KEY in your .env to enable live stock prices.');
+      }
+
+      await withConcurrencyLimit(
+        stockNeeded.map(h => async () => {
           const symbol = h.priceId ?? h.symbol;
           const price = await fetchStockPrice(symbol);
           if (price != null) {
@@ -149,7 +194,8 @@ export function useAssetPrices(holdings: Holding[]) {
             srcMap[h.id] = 'live';
             cache[symbol] = { price, timestamp: Date.now() };
           }
-        })
+        }),
+        CONCURRENCY,
       );
 
       // Pass 4: anything still missing falls back to manual price or 0
@@ -176,12 +222,21 @@ export function useAssetPrices(holdings: Holding[]) {
     return () => { cancelled = true; };
   }, [holdingsKey, refreshTick]);
 
+  const canRefresh = Date.now() >= cooldownUntil;
+  const cooldownSeconds = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
+
   return {
     prices,
     sources,
     loading,
     error,
     lastUpdated,
-    refresh: () => setRefreshTick(t => t + 1),
+    canRefresh,
+    cooldownSeconds,
+    refresh: () => {
+      if (!canRefresh) return;
+      setCooldownUntil(Date.now() + REFRESH_COOLDOWN);
+      setRefreshTick(t => t + 1);
+    },
   };
 }

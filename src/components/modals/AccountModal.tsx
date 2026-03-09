@@ -76,6 +76,7 @@ export default function AccountModal({ account, onClose }: Props) {
             <input
               className="input"
               type="number"
+              inputMode="decimal"
               step="0.01"
               placeholder="0.00"
               value={initialBalance}

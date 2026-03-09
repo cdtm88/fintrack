@@ -144,13 +144,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="page-title">Dashboard</h1>
           <p className="page-subtitle">{format(now, 'MMMM yyyy')}</p>
         </div>
-        <button className="btn-primary flex items-center gap-2" onClick={() => setShowTxnModal(true)}>
-          <Plus size={16} /> Add Transaction
+        <button className="btn-primary flex items-center gap-1.5 whitespace-nowrap shrink-0" onClick={() => setShowTxnModal(true)}>
+          <Plus size={16} /> <span className="hidden sm:inline">Add </span>Transaction
         </button>
       </div>
 

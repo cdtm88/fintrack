@@ -166,6 +166,7 @@ function AccountStep({ onNext }: { onNext: (accountId: string, currency: string)
           <input
             className="input"
             type="number"
+            inputMode="decimal"
             step="0.01"
             placeholder="0.00"
             value={initialBalance}
@@ -286,6 +287,7 @@ function TransactionStep({
           <input
             className="input text-lg font-semibold"
             type="number"
+            inputMode="decimal"
             step="0.01"
             min="0.01"
             placeholder="0.00"

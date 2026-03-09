@@ -45,7 +45,7 @@ export default function Investments() {
   const holdings = (data?.holdings ?? []) as Holding[];
   const accounts = (data?.accounts ?? []) as Account[];
 
-  const { prices, sources, loading: pricesLoading, error: pricesError, lastUpdated, refresh } = useAssetPrices(holdings);
+  const { prices, sources, loading: pricesLoading, error: pricesError, lastUpdated, refresh, canRefresh, cooldownSeconds } = useAssetPrices(holdings);
 
   function handleDelete(h: Holding) {
     db.transact(db.tx.holdings[h.id].delete());
@@ -89,23 +89,25 @@ export default function Investments() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="page-title">Investments</h1>
           <p className="page-subtitle">{holdings.length} holding{holdings.length !== 1 ? 's' : ''}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
-            className="btn-secondary flex items-center gap-2"
+            className="btn-secondary flex items-center gap-1.5 whitespace-nowrap"
             onClick={refresh}
-            disabled={pricesLoading}
-            title="Refresh prices"
+            disabled={pricesLoading || !canRefresh}
+            title={canRefresh ? 'Refresh prices' : `Available in ${cooldownSeconds}s`}
           >
             <RefreshCw size={14} className={pricesLoading ? 'animate-spin' : ''} />
-            Refresh
+            <span className="hidden sm:inline">
+              {!canRefresh ? `${cooldownSeconds}s` : 'Refresh'}
+            </span>
           </button>
-          <button className="btn-primary flex items-center gap-2" onClick={() => { setEditHolding(undefined); setShowModal(true); }}>
-            <Plus size={16} /> Add Holding
+          <button className="btn-primary flex items-center gap-1.5 whitespace-nowrap" onClick={() => { setEditHolding(undefined); setShowModal(true); }}>
+            <Plus size={16} /> <span className="hidden sm:inline">Add </span>Holding
           </button>
         </div>
       </div>
@@ -118,30 +120,30 @@ export default function Investments() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card">
+        <div className="card min-w-0">
           <p className="label mb-1">Total Value</p>
-          <p className="text-2xl font-bold text-primary">{formatCurrency(totalValue, settings.baseCurrency)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-primary truncate">{formatCurrency(totalValue, settings.baseCurrency)}</p>
           {lastUpdated && <p className="text-xs text-muted mt-1">Updated {new Date(lastUpdated).toLocaleTimeString()}</p>}
         </div>
-        <div className="card">
+        <div className="card min-w-0">
           <p className="label mb-1">Total Cost</p>
-          <p className="text-2xl font-bold text-secondary">{formatCurrency(totalCost, settings.baseCurrency)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-secondary truncate">{formatCurrency(totalCost, settings.baseCurrency)}</p>
           <p className="text-xs text-muted mt-1">Avg. cost basis</p>
         </div>
-        <div className="card">
+        <div className="card min-w-0">
           <p className="label mb-1">Unrealised P&amp;L</p>
-          <p className={`text-2xl font-bold ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className={`text-xl sm:text-2xl font-bold truncate ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
             {totalPnl >= 0 ? '+' : ''}{formatCurrency(totalPnl, settings.baseCurrency)}
           </p>
           <p className="text-xs text-muted mt-1">Since purchase</p>
         </div>
-        <div className="card">
+        <div className="card min-w-0">
           <p className="label mb-1">Total Return</p>
           <div className="flex items-center gap-1.5">
             {totalReturn >= 0
-              ? <TrendingUp size={18} className="text-emerald-500" />
-              : <TrendingDown size={18} className="text-red-500" />}
-            <p className={`text-2xl font-bold ${totalReturn >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+              ? <TrendingUp size={18} className="text-emerald-500 shrink-0" />
+              : <TrendingDown size={18} className="text-red-500 shrink-0" />}
+            <p className={`text-xl sm:text-2xl font-bold truncate ${totalReturn >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
               {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
             </p>
           </div>
@@ -169,10 +171,10 @@ export default function Investments() {
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-700">
                     <th className="px-5 py-3 text-left text-xs font-medium text-muted uppercase tracking-wide">Asset</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wide">Qty</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wide">Price</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wide">Qty</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wide">Price</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wide">Value</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wide">P&amp;L</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wide">P&amp;L</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wide">Return</th>
                     <th className="px-3 py-3" />
                   </tr>
@@ -201,8 +203,8 @@ export default function Investments() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right text-secondary tabular-nums">{h.quantity.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right tabular-nums">
+                        <td className="hidden sm:table-cell px-4 py-3 text-right text-secondary tabular-nums">{h.quantity.toLocaleString()}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-right tabular-nums">
                           <div className="flex items-center justify-end gap-1">
                             <PriceSourceIcon source={sources[h.id]} />
                             <span className="text-secondary">{formatCurrency(price, h.currency)}</span>
@@ -212,14 +214,14 @@ export default function Investments() {
                           {formatCurrency(value, h.currency)}
                           <div className="text-xs text-muted font-normal">{allocation.toFixed(1)}%</div>
                         </td>
-                        <td className={`px-4 py-3 text-right font-semibold tabular-nums ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                        <td className={`hidden sm:table-cell px-4 py-3 text-right font-semibold tabular-nums ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                           {pnl >= 0 ? '+' : ''}{formatCurrency(pnl, h.currency)}
                         </td>
                         <td className={`px-4 py-3 text-right font-semibold tabular-nums ${ret >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                           {ret >= 0 ? '+' : ''}{ret.toFixed(2)}%
                         </td>
                         <td className="px-3 py-3">
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <button className="btn-ghost p-1.5" onClick={() => { setEditHolding(h); setShowModal(true); }}>
                               <Pencil size={13} />
                             </button>

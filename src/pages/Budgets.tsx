@@ -104,6 +104,7 @@ function BudgetRow({
               <input
                 className="input w-28 pl-10 py-1.5 text-sm"
                 type="number"
+                inputMode="decimal"
                 min="1"
                 step="1"
                 placeholder="Amount"

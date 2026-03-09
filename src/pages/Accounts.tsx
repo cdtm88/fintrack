@@ -54,17 +54,17 @@ export default function Accounts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="page-title">Accounts</h1>
           <p className="page-subtitle">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</p>
         </div>
-        <div className="flex gap-2">
-          <button className="btn-secondary flex items-center gap-2" onClick={() => { setTransferToAccountId(undefined); setShowTransferModal(true); }}>
-            <ArrowLeftRight size={15} /> Transfer
+        <div className="flex gap-2 shrink-0">
+          <button className="btn-secondary flex items-center gap-1.5 whitespace-nowrap" onClick={() => { setTransferToAccountId(undefined); setShowTransferModal(true); }}>
+            <ArrowLeftRight size={15} /> <span className="hidden sm:inline">Transfer</span>
           </button>
-          <button className="btn-primary flex items-center gap-2" onClick={() => { setEditAccount(undefined); setShowModal(true); }}>
-            <Plus size={16} /> New Account
+          <button className="btn-primary flex items-center gap-1.5 whitespace-nowrap" onClick={() => { setEditAccount(undefined); setShowModal(true); }}>
+            <Plus size={16} /> <span className="hidden sm:inline">New </span>Account
           </button>
         </div>
       </div>
@@ -116,7 +116,7 @@ export default function Accounts() {
                           {accountTypeLabel(account.type)} · {account.currency}
                         </p>
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         {account.type === 'credit' && (
                           <button
                             className="btn-ghost p-1.5 text-indigo-500"
@@ -134,7 +134,7 @@ export default function Accounts() {
                         </button>
                       </div>
                     </div>
-                    <p className={`text-3xl font-bold mb-1 ${balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600 dark:text-red-400'}`}>
+                    <p className={`text-2xl sm:text-3xl font-bold mb-1 truncate ${balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600 dark:text-red-400'}`}>
                       {formatCurrency(balance, account.currency)}
                     </p>
                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
