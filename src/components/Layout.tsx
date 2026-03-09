@@ -45,8 +45,13 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-        <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
-          <p className="text-xs text-muted truncate">{user.email ?? ''}</p>
+        <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shrink-0 select-none">
+              {(user.email ?? 'U').slice(0, 2).toUpperCase()}
+            </div>
+            <p className="text-xs text-muted truncate">{user.email ?? ''}</p>
+          </div>
           <div className="flex items-center justify-between">
             <p className="text-slate-400 text-xs">v1.3.0</p>
             <button
@@ -91,8 +96,13 @@ export default function Layout() {
                 </NavLink>
               ))}
             </nav>
-            <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800">
-              <p className="text-xs text-muted truncate mb-2">{user.email ?? ''}</p>
+            <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shrink-0 select-none">
+                  {(user.email ?? 'U').slice(0, 2).toUpperCase()}
+                </div>
+                <p className="text-xs text-muted truncate">{user.email ?? ''}</p>
+              </div>
               <button
                 onClick={() => db.auth.signOut()}
                 className="flex items-center gap-2 text-sm text-muted hover:text-red-500 transition-colors w-full"

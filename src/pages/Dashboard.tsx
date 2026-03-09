@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import {
   Plus, TrendingUp, TrendingDown, Wallet, Percent, RefreshCw,
-  ArrowUp, ArrowDown, AlertTriangle, Repeat, BarChart2,
+  ArrowUp, ArrowDown, AlertTriangle, Repeat, BarChart2, ChevronDown,
 } from 'lucide-react';
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -45,6 +45,7 @@ function delta(current: number, previous: number): number | null {
 
 export default function Dashboard() {
   const [showTxnModal, setShowTxnModal] = useState(false);
+  const [portfolioExpanded, setPortfolioExpanded] = useState(true);
   const { settings } = useSettings();
   const { convert, loading: ratesLoading } = useExchangeRates();
   const navigate = useNavigate();
@@ -165,7 +166,7 @@ export default function Dashboard() {
               <Wallet size={17} className="text-indigo-500" />
             </div>
           </div>
-          <p className={`text-2xl font-bold ${netWorthInBase >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">
             {formatCurrency(netWorthInBase, settings.baseCurrency)}
           </p>
           <p className="text-xs text-muted mt-1">All accounts converted</p>
@@ -204,8 +205,14 @@ export default function Dashboard() {
           <p className={`text-2xl font-bold ${savingsRate >= 20 ? 'text-emerald-600 dark:text-emerald-400' : savingsRate >= 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
             {savingsRate}%
           </p>
+          <div className="mt-2 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500" style={{
+              width: `${Math.max(0, Math.min(100, savingsRate))}%`,
+              backgroundColor: savingsRate >= 20 ? '#22c55e' : savingsRate >= 0 ? '#eab308' : '#ef4444',
+            }} />
+          </div>
           <p className="text-xs text-muted mt-1">
-            {formatCurrency(thisMonth.income - thisMonth.expense, settings.baseCurrency)} saved
+            {formatCurrency(Math.max(0, thisMonth.income - thisMonth.expense), settings.baseCurrency)} saved this month
           </p>
         </div>
       </div>
@@ -214,61 +221,68 @@ export default function Dashboard() {
       {holdings.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-primary flex items-center gap-2">
+            <button
+              className="flex items-center gap-2 text-sm font-semibold text-primary"
+              onClick={() => setPortfolioExpanded(e => !e)}
+            >
               <BarChart2 size={15} className="text-indigo-500" /> Investment Portfolio
-            </h2>
+              <ChevronDown size={14} className={`text-muted transition-transform ${portfolioExpanded ? 'rotate-180' : ''}`} />
+            </button>
             <button className="text-xs text-indigo-500 hover:text-indigo-600" onClick={() => navigate('/investments')}>
               View all →
             </button>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-            <div>
-              <p className="text-xs text-muted mb-0.5">Total Value</p>
-              <p className="text-lg font-bold text-primary">{formatCurrency(totalPortfolioValue, settings.baseCurrency)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted mb-0.5">Total Cost</p>
-              <p className="text-lg font-bold text-secondary">{formatCurrency(totalPortfolioCost, settings.baseCurrency)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted mb-0.5">Unrealised P&amp;L</p>
-              <p className={`text-lg font-bold ${portfolioPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                {portfolioPnl >= 0 ? '+' : ''}{formatCurrency(portfolioPnl, settings.baseCurrency)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted mb-0.5">Return</p>
-              <div className="flex items-center gap-1">
-                {portfolioReturn >= 0
-                  ? <TrendingUp size={14} className="text-emerald-500" />
-                  : <TrendingDown size={14} className="text-red-500" />}
-                <p className={`text-lg font-bold ${portfolioReturn >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {portfolioReturn >= 0 ? '+' : ''}{portfolioReturn.toFixed(2)}%
-                </p>
-              </div>
-            </div>
-          </div>
-          {/* Mini holdings list */}
-          <div className="space-y-1 border-t border-slate-100 dark:border-slate-800 pt-3">
-            {[...holdings]
-              .sort((a, b) => (b.quantity * (holdingPrices[b.id] ?? 0)) - (a.quantity * (holdingPrices[a.id] ?? 0)))
-              .slice(0, 5)
-              .map(h => {
-                const price = holdingPrices[h.id] ?? h.manualPrice ?? 0;
-                const value = h.quantity * price;
-                const pnl   = value - h.quantity * h.costBasis;
-                return (
-                  <div key={h.id} className="flex items-center gap-3 py-1.5">
-                    <span className="text-xs font-bold text-primary w-14 shrink-0">{h.symbol}</span>
-                    <span className="text-xs text-muted flex-1 truncate">{h.name}</span>
-                    <span className="text-xs font-semibold text-secondary tabular-nums">{formatCurrency(value, h.currency)}</span>
-                    <span className={`text-xs font-medium tabular-nums w-16 text-right ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {pnl >= 0 ? '+' : ''}{formatCurrency(pnl, h.currency)}
-                    </span>
+          {portfolioExpanded && (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <p className="text-xs text-muted mb-0.5">Total Value</p>
+                  <p className="text-lg font-bold text-primary">{formatCurrency(totalPortfolioValue, settings.baseCurrency)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted mb-0.5">Total Cost</p>
+                  <p className="text-lg font-bold text-secondary">{formatCurrency(totalPortfolioCost, settings.baseCurrency)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted mb-0.5">Unrealised P&amp;L</p>
+                  <p className={`text-lg font-bold ${portfolioPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {portfolioPnl >= 0 ? '+' : ''}{formatCurrency(portfolioPnl, settings.baseCurrency)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted mb-0.5">Return</p>
+                  <div className="flex items-center gap-1">
+                    {portfolioReturn >= 0
+                      ? <TrendingUp size={14} className="text-emerald-500" />
+                      : <TrendingDown size={14} className="text-red-500" />}
+                    <p className={`text-lg font-bold ${portfolioReturn >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {portfolioReturn >= 0 ? '+' : ''}{portfolioReturn.toFixed(2)}%
+                    </p>
                   </div>
-                );
-              })}
-          </div>
+                </div>
+              </div>
+              <div className="space-y-1 border-t border-slate-100 dark:border-slate-800 pt-3">
+                {[...holdings]
+                  .sort((a, b) => (b.quantity * (holdingPrices[b.id] ?? 0)) - (a.quantity * (holdingPrices[a.id] ?? 0)))
+                  .slice(0, 5)
+                  .map(h => {
+                    const price = holdingPrices[h.id] ?? h.manualPrice ?? 0;
+                    const value = h.quantity * price;
+                    const pnl   = value - h.quantity * h.costBasis;
+                    return (
+                      <div key={h.id} className="flex items-center gap-3 py-1.5">
+                        <span className="text-xs font-bold text-primary w-14 shrink-0">{h.symbol}</span>
+                        <span className="text-xs text-muted flex-1 truncate">{h.name}</span>
+                        <span className="text-xs font-semibold text-secondary tabular-nums">{formatCurrency(value, h.currency)}</span>
+                        <span className={`text-xs font-medium tabular-nums w-16 text-right ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {pnl >= 0 ? '+' : ''}{formatCurrency(pnl, h.currency)}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -348,7 +362,7 @@ export default function Dashboard() {
         <div className="card">
           <h2 className="text-sm font-semibold text-primary mb-4">Weekly Spend (Last 8 Weeks)</h2>
           {weeklyData.some(w => w.income > 0 || w.expense > 0) ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={weeklyData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis dataKey="label" tick={{ fill: tickColor, fontSize: 11 }} />
@@ -364,7 +378,7 @@ export default function Dashboard() {
         <div className="card">
           <h2 className="text-sm font-semibold text-primary mb-4">Monthly Overview (Last 6 Months)</h2>
           {monthlyData.some(m => m.income > 0 || m.expense > 0) ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={monthlyData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis dataKey="label" tick={{ fill: tickColor, fontSize: 11 }} />
@@ -447,8 +461,8 @@ export default function Dashboard() {
                   <div className="w-2.5 h-8 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
                   <div className="min-w-0">
                     <p className="text-secondary text-sm font-medium truncate">{a.name}</p>
-                    <p className={`text-sm font-semibold ${bal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {formatCurrency(bal, a.currency)}
+                    <p className={`text-sm font-semibold ${a.type === 'credit' ? 'text-amber-600 dark:text-amber-400' : bal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {a.type === 'credit' && bal < 0 ? formatCurrency(Math.abs(bal), a.currency) : formatCurrency(bal, a.currency)}
                     </p>
                   </div>
                 </div>
@@ -509,7 +523,7 @@ function TxnRow({ t }: { t: Transaction }) {
 
 function EmptyChart() {
   return (
-    <div className="h-[220px] flex items-center justify-center">
+    <div className="h-[280px] flex items-center justify-center">
       <p className="text-muted text-sm">No data yet</p>
     </div>
   );

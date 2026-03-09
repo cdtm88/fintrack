@@ -236,6 +236,11 @@ export default function Transactions() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-secondary text-sm font-medium truncate">{t.description}</p>
+                      {isTransfer && (
+                        <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                          Transfer
+                        </span>
+                      )}
                       {t.isRecurring && (
                         <span title={`Recurring ${t.recurringInterval}`}>
                           <Repeat size={12} className="text-indigo-500 shrink-0" />

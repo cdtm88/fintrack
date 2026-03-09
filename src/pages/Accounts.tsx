@@ -80,21 +80,40 @@ export default function Accounts() {
         </div>
       ) : (
         <>
-          {/* Currency totals */}
+          {/* Assets / Liabilities totals */}
           {(() => {
-            const byCurrency: Record<string, number> = {};
+            const assetsByCurrency: Record<string, number> = {};
+            const liabsByCurrency: Record<string, number> = {};
             for (const a of accounts) {
               const bal = getAccountBalance(a, transactions);
-              byCurrency[a.currency] = (byCurrency[a.currency] ?? 0) + bal;
+              if (a.type === 'credit') {
+                if (bal < 0) liabsByCurrency[a.currency] = (liabsByCurrency[a.currency] ?? 0) + Math.abs(bal);
+              } else {
+                assetsByCurrency[a.currency] = (assetsByCurrency[a.currency] ?? 0) + bal;
+              }
             }
+            const currencies = [...new Set([...Object.keys(assetsByCurrency), ...Object.keys(liabsByCurrency)])];
             return (
               <div className="flex flex-wrap gap-3">
-                {Object.entries(byCurrency).map(([currency, total]) => (
-                  <div key={currency} className="card py-3 px-4 flex items-center gap-3">
-                    <span className="text-muted text-sm">Total ({currency})</span>
-                    <span className={`text-lg font-bold ${total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {formatCurrency(total, currency)}
-                    </span>
+                {currencies.map(currency => (
+                  <div key={currency} className="card py-3 px-4 min-w-[160px]">
+                    <p className="text-xs text-muted uppercase tracking-wide font-medium mb-2">{currency}</p>
+                    {assetsByCurrency[currency] != null && (
+                      <div className="flex items-center justify-between gap-6">
+                        <span className="text-xs text-muted">Assets</span>
+                        <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                          {formatCurrency(assetsByCurrency[currency], currency)}
+                        </span>
+                      </div>
+                    )}
+                    {liabsByCurrency[currency] != null && (
+                      <div className="flex items-center justify-between gap-6 mt-1">
+                        <span className="text-xs text-muted">Liabilities</span>
+                        <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
+                          {formatCurrency(liabsByCurrency[currency], currency)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -112,9 +131,16 @@ export default function Accounts() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="text-primary font-semibold">{account.name}</h3>
-                        <p className="text-muted text-xs mt-0.5">
-                          {accountTypeLabel(account.type)} · {account.currency}
-                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                            account.type === 'credit'
+                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                          }`}>
+                            {accountTypeLabel(account.type)}
+                          </span>
+                          <span className="text-muted text-xs">{account.currency}</span>
+                        </div>
                       </div>
                       <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         {account.type === 'credit' && (
@@ -134,9 +160,18 @@ export default function Accounts() {
                         </button>
                       </div>
                     </div>
-                    <p className={`text-2xl sm:text-3xl font-bold mb-1 truncate ${balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600 dark:text-red-400'}`}>
-                      {formatCurrency(balance, account.currency)}
-                    </p>
+                    {account.type === 'credit' && balance < 0 ? (
+                      <>
+                        <p className="text-2xl sm:text-3xl font-bold mb-0.5 truncate text-slate-900 dark:text-white">
+                          {formatCurrency(Math.abs(balance), account.currency)}
+                        </p>
+                        <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1">outstanding balance</p>
+                      </>
+                    ) : (
+                      <p className={`text-2xl sm:text-3xl font-bold mb-1 truncate ${balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600 dark:text-red-400'}`}>
+                        {formatCurrency(balance, account.currency)}
+                      </p>
+                    )}
                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                       <span className="text-muted text-xs">{txnCount} transaction{txnCount !== 1 ? 's' : ''}</span>
                       <span className="text-muted text-xs">Opening: {formatCurrency(account.initialBalance, account.currency)}</span>

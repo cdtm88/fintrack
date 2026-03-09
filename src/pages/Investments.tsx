@@ -23,6 +23,24 @@ const TYPE_COLORS: Record<string, string> = {
   other:  '#94a3b8',
 };
 
+const HOLDING_COLORS = [
+  '#6366f1', '#f97316', '#14b8a6', '#f43f5e',
+  '#eab308', '#8b5cf6', '#22c55e', '#3b82f6',
+  '#ec4899', '#06b6d4',
+];
+
+// Approximate fixed rates (relative to USD) for base currency display
+const APPROX_USD_RATES: Record<string, number> = {
+  USD: 1, AED: 3.6725, GBP: 0.79, EUR: 0.92,
+};
+
+function toBaseCurrency(amount: number, from: string, to: string): number {
+  if (from === to) return amount;
+  const fromRate = APPROX_USD_RATES[from] ?? 1;
+  const toRate = APPROX_USD_RATES[to] ?? 1;
+  return amount * (toRate / fromRate);
+}
+
 function PriceSourceIcon({ source }: { source: 'live' | 'cache' | 'manual' | 'missing' | undefined }) {
   if (source === 'live')    return <span title="Live price"><Wifi size={11} className="text-emerald-500" /></span>;
   if (source === 'cache')   return <span title="Cached price"><Clock size={11} className="text-yellow-500" /></span>;
@@ -60,12 +78,18 @@ export default function Investments() {
   const totalPnl   = totalValue - totalCost;
   const totalReturn = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
 
+  // Stable per-holding color map (alphabetical by symbol for consistency)
+  const symbolColorMap: Record<string, string> = {};
+  [...holdings].sort((a, b) => a.symbol.localeCompare(b.symbol)).forEach((h, i) => {
+    symbolColorMap[h.symbol] = HOLDING_COLORS[i % HOLDING_COLORS.length];
+  });
+
   // Allocation by holding
   const allocationData = holdings
     .map(h => ({
       name: h.symbol,
       value: h.quantity * (prices[h.id] ?? 0),
-      color: TYPE_COLORS[h.assetType] ?? '#94a3b8',
+      color: symbolColorMap[h.symbol] ?? '#94a3b8',
     }))
     .filter(d => d.value > 0)
     .sort((a, b) => b.value - a.value);
@@ -193,7 +217,7 @@ export default function Investments() {
                           <div className="flex items-center gap-2.5">
                             <span
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-                              style={{ backgroundColor: TYPE_COLORS[h.assetType] ?? '#94a3b8' }}
+                              style={{ backgroundColor: symbolColorMap[h.symbol] ?? '#94a3b8' }}
                             >
                               {h.symbol.slice(0, 3)}
                             </span>
@@ -212,6 +236,11 @@ export default function Investments() {
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-primary tabular-nums">
                           {formatCurrency(value, h.currency)}
+                          {h.currency !== settings.baseCurrency && value > 0 && (
+                            <div className="text-xs text-muted font-normal">
+                              ≈{formatCurrency(toBaseCurrency(value, h.currency, settings.baseCurrency), settings.baseCurrency)}
+                            </div>
+                          )}
                           <div className="text-xs text-muted font-normal">{allocation.toFixed(1)}%</div>
                         </td>
                         <td className={`hidden sm:table-cell px-4 py-3 text-right font-semibold tabular-nums ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
