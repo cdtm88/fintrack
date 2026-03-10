@@ -51,6 +51,7 @@ export interface Holding {
   currency: string;        // Native currency of the asset (USD for US stocks, etc.)
   priceId?: string;        // CoinGecko ID for crypto (e.g. 'bitcoin'); alt Yahoo symbol if needed
   manualPrice?: number;    // Optional override — used if live fetch fails
+  lastKnownPrice?: number; // Auto-saved last live price — fallback when API is down
   createdAt: number;
   userId: string;
   account?: Account;

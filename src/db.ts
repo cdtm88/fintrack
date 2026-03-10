@@ -46,6 +46,7 @@ const schema = i.schema({
       currency: i.string(),
       priceId: i.string().optional(),
       manualPrice: i.number().optional(),
+      lastKnownPrice: i.number().optional(),
       createdAt: i.number(),
       userId: i.string(),
     }),

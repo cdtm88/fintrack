@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Holding } from '../types';
+import { db } from '../db';
 
 const CACHE_KEY = 'fintrack_asset_prices';
 const CACHE_TTL = 15 * 60 * 1000;      // 15 minutes — avoids redundant API calls
@@ -191,12 +192,38 @@ export function useAssetPrices(holdings: Holding[]) {
         CONCURRENCY,
       );
 
-      // Pass 4: anything still missing falls back to manual price or 0
+      // Pass 4: anything still missing — try stale cache, then lastKnownPrice, then manualPrice, then 0
       for (const h of hs) {
         if (result[h.id] == null) {
-          result[h.id] = h.manualPrice ?? 0;
-          srcMap[h.id] = h.manualPrice != null ? 'manual' : 'missing';
+          const key = h.priceId ?? h.symbol;
+          const staleEntry = cache[key];
+          if (staleEntry && staleEntry.price > 0) {
+            result[h.id] = staleEntry.price;
+            srcMap[h.id] = 'cache';
+          } else if (h.lastKnownPrice != null && h.lastKnownPrice > 0) {
+            result[h.id] = h.lastKnownPrice;
+            srcMap[h.id] = 'cache';
+          } else if (h.manualPrice != null) {
+            result[h.id] = h.manualPrice;
+            srcMap[h.id] = 'manual';
+          } else {
+            result[h.id] = 0;
+            srcMap[h.id] = 'missing';
+          }
         }
+      }
+
+      // Pass 5: persist live prices to DB as lastKnownPrice so they survive cache clears
+      const dbUpdates = [];
+      for (const h of hs) {
+        if (srcMap[h.id] === 'live' && result[h.id] > 0 && result[h.id] !== h.lastKnownPrice) {
+          dbUpdates.push(
+            db.tx.holdings[h.id].update({ lastKnownPrice: result[h.id] })
+          );
+        }
+      }
+      if (dbUpdates.length > 0) {
+        try { db.transact(dbUpdates); } catch {}
       }
 
       if (!cancelled) {

@@ -21,7 +21,9 @@
       "Bash(grep -l \"MISSING_APP_ID\\\\|91618de1\" dist/assets/*.js)",
       "Bash(xxd /Users/christianmoore/Documents/claude/fintrack/.env)",
       "Bash(npx vite build)",
-      "Bash(grep -r \"MISSING_APP_ID\\\\|91618de1\" /Users/christianmoore/Documents/claude/fintrack/dist/assets/*.js)"
+      "Bash(grep -r \"MISSING_APP_ID\\\\|91618de1\" /Users/christianmoore/Documents/claude/fintrack/dist/assets/*.js)",
+      "Bash(grep -l \"FINNHUB\" .env*)",
+      "Bash(ls .env*)"
     ]
   }
 }
