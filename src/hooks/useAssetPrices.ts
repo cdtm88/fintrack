@@ -6,9 +6,6 @@ const CACHE_TTL = 15 * 60 * 1000;      // 15 minutes — avoids redundant API ca
 const REFRESH_COOLDOWN = 60 * 1000;    // 60 seconds between manual refreshes
 const CONCURRENCY = 5;                  // max parallel Finnhub requests
 
-// Set VITE_FINNHUB_KEY in your .env file (get a free key at finnhub.io)
-const FINNHUB_KEY = import.meta.env.VITE_FINNHUB_KEY ?? '';
-
 type PriceCache = Record<string, { price: number; timestamp: number }>;
 
 function loadCache(): PriceCache {
@@ -49,18 +46,16 @@ async function fetchCryptoPrices(
   return res.json();
 }
 
-/** Fetch a single stock/ETF/fund quote from Finnhub.
- *  Returns null on error or if no key is configured. */
+/** Fetch a single stock/ETF/fund quote via the backend proxy.
+ *  Returns null on error. */
 async function fetchStockPrice(symbol: string): Promise<number | null> {
-  if (!FINNHUB_KEY) return null;
   try {
     const res = await fetch(
-      `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`
+      `/api/quote?symbol=${encodeURIComponent(symbol)}`
     );
     if (!res.ok) return null;
     const data = await res.json();
-    // data.c = current price; 0 means market closed with no data
-    return typeof data.c === 'number' && data.c > 0 ? data.c : null;
+    return typeof data.price === 'number' ? data.price : null;
   } catch {
     return null;
   }
@@ -181,9 +176,7 @@ export function useAssetPrices(holdings: Holding[]) {
         h => (h.assetType === 'stock' || h.assetType === 'etf' || h.assetType === 'fund') && result[h.id] == null
       );
 
-      if (stockNeeded.length > 0 && !FINNHUB_KEY) {
-        setError('Set VITE_FINNHUB_KEY in your .env to enable live stock prices.');
-      }
+      // Stock prices are fetched via the /api/quote backend proxy
 
       await withConcurrencyLimit(
         stockNeeded.map(h => async () => {

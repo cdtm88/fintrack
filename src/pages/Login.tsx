@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { db } from '../db';
 import FintrackLogo from '../components/FintrackLogo';
+
+const CODE_COOLDOWN = 60; // seconds between magic code requests
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -8,16 +10,25 @@ export default function Login() {
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown(c => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
 
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
+    if (cooldown > 0) return;
     setLoading(true);
     setError('');
     try {
       await db.auth.sendMagicCode({ email });
+      setCooldown(CODE_COOLDOWN);
       setStep('code');
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to send code. Check the email address.');
+    } catch {
+      setError('Failed to send code. Please check your email and try again.');
     } finally {
       setLoading(false);
     }
@@ -29,8 +40,8 @@ export default function Login() {
     setError('');
     try {
       await db.auth.signInWithMagicCode({ email, code });
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Invalid or expired code. Try again.');
+    } catch {
+      setError('Invalid or expired code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -70,8 +81,8 @@ export default function Login() {
                 />
               </div>
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-              <button type="submit" className="btn-primary w-full" disabled={loading}>
-                {loading ? 'Sending…' : 'Send code'}
+              <button type="submit" className="btn-primary w-full" disabled={loading || cooldown > 0}>
+                {loading ? 'Sending…' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Send code'}
               </button>
             </form>
           ) : (

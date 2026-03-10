@@ -23,19 +23,15 @@ interface Suggestion {
 async function searchYahooFinance(query: string): Promise<Suggestion[]> {
   try {
     const res = await fetch(
-      `/api/yf/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=8&newsCount=0&enableFuzzyQuery=false`
+      `/api/yf-search?q=${encodeURIComponent(query)}`
     );
     if (!res.ok) return [];
     const data = await res.json();
-    return (data?.quotes ?? [])
-      .filter((q: { symbol?: string; longname?: string; shortname?: string; quoteType?: string }) =>
-        q.symbol && (q.longname || q.shortname)
-      )
-      .map((q: { symbol: string; longname?: string; shortname?: string; quoteType?: string }) => ({
-        symbol: q.symbol,
-        name: q.longname ?? q.shortname ?? q.symbol,
-        type: q.quoteType,
-      }));
+    return (data?.quotes ?? []).map((q: { symbol: string; name: string; type?: string }) => ({
+      symbol: q.symbol,
+      name: q.name,
+      type: q.type,
+    }));
   } catch {
     return [];
   }

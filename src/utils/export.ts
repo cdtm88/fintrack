@@ -1,6 +1,12 @@
 import { format } from 'date-fns';
 import type { Transaction } from '../types';
 
+/** Prevent CSV formula injection by prefixing dangerous leading characters. */
+function sanitiseCell(val: string): string {
+  if (/^[=+\-@\t\r]/.test(val)) return "'" + val;
+  return val;
+}
+
 export function exportTransactionsCSV(transactions: Transaction[]) {
   const headers = ['Date', 'Description', 'Type', 'Amount', 'Currency', 'Account', 'Category', 'Recurring', 'Notes'];
 
@@ -8,14 +14,14 @@ export function exportTransactionsCSV(transactions: Transaction[]) {
     .sort((a, b) => b.date - a.date)
     .map(t => [
       format(new Date(t.date), 'yyyy-MM-dd'),
-      t.description,
+      sanitiseCell(t.description),
       t.type,
       t.amount.toFixed(2),
       t.account?.currency ?? '',
-      t.account?.name ?? '',
-      t.category?.name ?? '',
+      sanitiseCell(t.account?.name ?? ''),
+      sanitiseCell(t.category?.name ?? ''),
       t.isRecurring ? (t.recurringInterval ?? 'yes') : 'no',
-      t.notes ?? '',
+      sanitiseCell(t.notes ?? ''),
     ]);
 
   const csv = [headers, ...rows]

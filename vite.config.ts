@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   build: {
+    sourcemap: false,
     // Split heavy vendors into separate chunks so the main bundle stays small
     rollupOptions: {
       output: {
