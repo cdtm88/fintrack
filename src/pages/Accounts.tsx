@@ -125,7 +125,7 @@ export default function Accounts() {
               const balance = getAccountBalance(account, transactions);
               const txnCount = transactions.filter(t => t.account?.id === account.id).length;
               return (
-                <div key={account.id} className="card group relative overflow-hidden">
+                <div key={account.id} className="card group relative overflow-hidden transition-shadow hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
                   <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ backgroundColor: account.color }} />
                   <div className="pl-3">
                     <div className="flex items-start justify-between mb-3">

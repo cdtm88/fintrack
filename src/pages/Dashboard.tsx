@@ -10,6 +10,7 @@ import { useSeedCategories } from '../hooks/useSeedCategories';
 import { useAssetPrices } from '../hooks/useAssetPrices';
 import { useUser } from '../context/UserContext';
 import TransactionModal from '../components/modals/TransactionModal';
+import TransferModal from '../components/modals/TransferModal';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
@@ -17,6 +18,7 @@ import {
 import {
   Plus, TrendingUp, TrendingDown, Wallet, Percent, RefreshCw,
   ArrowUp, ArrowDown, AlertTriangle, Repeat, BarChart2, ChevronDown,
+  ArrowLeftRight, CreditCard,
 } from 'lucide-react';
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -45,6 +47,8 @@ function delta(current: number, previous: number): number | null {
 
 export default function Dashboard() {
   const [showTxnModal, setShowTxnModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showPayCCModal, setShowPayCCModal] = useState(false);
   const [portfolioExpanded, setPortfolioExpanded] = useState(true);
   const { settings } = useSettings();
   const { convert, loading: ratesLoading } = useExchangeRates();
@@ -150,20 +154,32 @@ export default function Dashboard() {
           <h1 className="page-title">Dashboard</h1>
           <p className="page-subtitle">{format(now, 'MMMM yyyy')}</p>
         </div>
-        <button className="btn-primary flex items-center gap-1.5 whitespace-nowrap shrink-0" onClick={() => setShowTxnModal(true)}>
-          <Plus size={16} /> <span className="hidden sm:inline">Add </span>Transaction
-        </button>
+        <div className="flex gap-2 shrink-0">
+          <button className="btn-secondary flex items-center gap-1.5 whitespace-nowrap" onClick={() => setShowTransferModal(true)}>
+            <ArrowLeftRight size={15} /> <span className="hidden sm:inline">Transfer</span>
+          </button>
+          {accounts.some(a => a.type === 'credit') && (
+            <button className="btn-secondary flex items-center gap-1.5 whitespace-nowrap" onClick={() => setShowPayCCModal(true)}>
+              <CreditCard size={15} /> <span className="hidden sm:inline">Pay Card</span>
+            </button>
+          )}
+          <button className="btn-primary flex items-center gap-1.5 whitespace-nowrap" onClick={() => setShowTxnModal(true)}>
+            <Plus size={16} /> <span className="hidden sm:inline">Add </span>Transaction
+          </button>
+        </div>
       </div>
 
       {/* Top stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Net worth */}
-        <div className="card">
+        <div className="card bg-indigo-50/60 border-indigo-100 dark:bg-indigo-950/30 dark:border-indigo-900/40">
           <div className="flex items-center justify-between mb-2">
             <span className="label mb-0">Net Worth ({settings.baseCurrency})</span>
             <div className="flex items-center gap-1">
               {ratesLoading && <RefreshCw size={12} className="text-slate-400 animate-spin" />}
-              <Wallet size={17} className="text-indigo-500" />
+              <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                <Wallet size={15} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
             </div>
           </div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -173,10 +189,12 @@ export default function Dashboard() {
         </div>
 
         {/* Income */}
-        <div className="card">
+        <div className="card bg-emerald-50/60 border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/40">
           <div className="flex items-center justify-between mb-2">
             <span className="label mb-0">Income</span>
-            <TrendingUp size={17} className="text-emerald-500" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+              <TrendingUp size={15} className="text-emerald-600 dark:text-emerald-400" />
+            </div>
           </div>
           <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             {formatCurrency(thisMonth.income, settings.baseCurrency)}
@@ -185,10 +203,12 @@ export default function Dashboard() {
         </div>
 
         {/* Expenses */}
-        <div className="card">
+        <div className="card bg-red-50/60 border-red-100 dark:bg-red-950/30 dark:border-red-900/40">
           <div className="flex items-center justify-between mb-2">
             <span className="label mb-0">Expenses</span>
-            <TrendingDown size={17} className="text-red-500" />
+            <div className="w-7 h-7 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+              <TrendingDown size={15} className="text-red-600 dark:text-red-400" />
+            </div>
           </div>
           <p className="text-2xl font-bold text-red-600 dark:text-red-400">
             {formatCurrency(thisMonth.expense, settings.baseCurrency)}
@@ -197,15 +217,17 @@ export default function Dashboard() {
         </div>
 
         {/* Savings rate */}
-        <div className="card">
+        <div className="card bg-amber-50/60 border-amber-100 dark:bg-amber-950/30 dark:border-amber-900/40">
           <div className="flex items-center justify-between mb-2">
             <span className="label mb-0">Savings Rate</span>
-            <Percent size={17} className="text-slate-400" />
+            <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+              <Percent size={15} className="text-amber-600 dark:text-amber-400" />
+            </div>
           </div>
           <p className={`text-2xl font-bold ${savingsRate >= 20 ? 'text-emerald-600 dark:text-emerald-400' : savingsRate >= 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
             {savingsRate}%
           </p>
-          <div className="mt-2 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="mt-2 h-1.5 bg-white/60 dark:bg-slate-800 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all duration-500" style={{
               width: `${Math.max(0, Math.min(100, savingsRate))}%`,
               backgroundColor: savingsRate >= 20 ? '#22c55e' : savingsRate >= 0 ? '#eab308' : '#ef4444',
@@ -384,7 +406,7 @@ export default function Dashboard() {
                 <XAxis dataKey="label" tick={{ fill: tickColor, fontSize: 11 }} />
                 <YAxis tick={{ fill: tickColor, fontSize: 11 }} />
                 <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} />
-                <Bar dataKey="income" name="Income" fill="#6366f1" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="income" name="Income" fill="#22c55e" radius={[3, 3, 0, 0]} />
                 <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -457,11 +479,11 @@ export default function Dashboard() {
             {accounts.map(a => {
               const bal = getAccountBalance(a, transactions);
               return (
-                <div key={a.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                  <div className="w-2.5 h-8 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
+                <div key={a.id} className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                  <div className="w-2.5 h-10 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
                   <div className="min-w-0">
                     <p className="text-secondary text-sm font-medium truncate">{a.name}</p>
-                    <p className={`text-sm font-semibold ${a.type === 'credit' ? 'text-amber-600 dark:text-amber-400' : bal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <p className={`text-base font-bold mt-0.5 ${a.type === 'credit' ? 'text-amber-600 dark:text-amber-400' : bal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                       {a.type === 'credit' && bal < 0 ? formatCurrency(Math.abs(bal), a.currency) : formatCurrency(bal, a.currency)}
                     </p>
                   </div>
@@ -478,6 +500,19 @@ export default function Dashboard() {
           categories={categories}
           previousTransactions={transactions}
           onClose={() => setShowTxnModal(false)}
+        />
+      )}
+      {showTransferModal && (
+        <TransferModal
+          accounts={accounts}
+          onClose={() => setShowTransferModal(false)}
+        />
+      )}
+      {showPayCCModal && (
+        <TransferModal
+          accounts={accounts}
+          defaultToAccountId={accounts.find(a => a.type === 'credit')?.id}
+          onClose={() => setShowPayCCModal(false)}
         />
       )}
     </div>
