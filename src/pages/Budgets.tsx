@@ -41,7 +41,7 @@ function BudgetRow({
 
   function save() {
     const amt = parseFloat(value);
-    if (!amt || amt <= 0) return;
+    if (isNaN(amt) || amt <= 0) return;
     if (budget) {
       db.transact(db.tx.budgets[budget.id].update({ amount: amt }));
     } else {
@@ -176,7 +176,8 @@ export default function Budgets() {
   }, 0);
 
   const overCount = budgetedCategories.filter(cat => {
-    const budget = budgets.find(b => b.categoryId === cat.id)!;
+    const budget = budgets.find(b => b.categoryId === cat.id);
+    if (!budget) return false;
     const spent = getMonthSpend(cat.id, transactions);
     return spent > budget.amount;
   }).length;

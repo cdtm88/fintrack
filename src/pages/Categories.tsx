@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { db } from '../db';
 import { useUser } from '../context/UserContext';
+import { useSettings } from '../context/SettingsContext';
 import type { Category, Transaction } from '../types';
 import { formatCurrency } from '../utils/currency';
 import CategoryModal from '../components/modals/CategoryModal';
@@ -16,6 +17,7 @@ export default function Categories() {
   const [showEmpty, setShowEmpty] = useState(false);
 
   const user = useUser();
+  const { settings } = useSettings();
 
   const { data, isLoading } = db.useQuery({
     categories: { $: { where: { userId: user.id } } },
@@ -176,7 +178,7 @@ export default function Categories() {
                     <span className="text-muted text-xs">{stats.count} transaction{stats.count !== 1 ? 's' : ''}</span>
                     {stats.count > 0 && (
                       <span className={`text-xs font-semibold ${amountColor}`}>
-                        {amountPrefix}{formatCurrency(Math.abs(displayAmount), 'AED')}
+                        {amountPrefix}{formatCurrency(Math.abs(displayAmount), settings.baseCurrency)}
                       </span>
                     )}
                   </div>
