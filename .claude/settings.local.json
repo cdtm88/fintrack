@@ -5,7 +5,17 @@
       "Bash(./node_modules/.bin/tailwindcss init:*)",
       "Bash(npm run:*)",
       "Bash(curl:*)",
-      "Bash(npx instant-cli@latest:*)"
+      "Bash(npx instant-cli@latest:*)",
+      "Bash(git rm --cached .env)",
+      "WebFetch(domain:instantdb.com)",
+      "Bash(npm view @instantdb/cli)",
+      "Bash(openssl dgst -sha256 -binary)",
+      "Bash(openssl base64 -A)",
+      "Bash(npx tsc -b --noEmit)",
+      "Bash(npx tsc --noEmit --esModuleInterop --moduleResolution node --module esnext --target es2022 api/quote.ts api/yf-search.ts)",
+      "Bash(git status -u)",
+      "Bash(git add .gitignore .env.example package.json package-lock.json vite.config.ts vercel.json instant.perms.ts api/quote.ts api/yf-search.ts src/hooks/useAssetPrices.ts src/components/modals/HoldingModal.tsx src/pages/Login.tsx src/utils/export.ts)",
+      "Bash(git commit:*)"
     ]
   }
 }
