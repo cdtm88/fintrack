@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-WmBUQDUJv4PZd/55zJYlD/f+4ANS6a8J+KXPXQ4K1yA='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.coingecko.com https://*.instantdb.com https://open.er-api.com; img-src 'self' data: blob:; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'sha256-WmBUQDUJv4PZd/55zJYlD/f+4ANS6a8J+KXPXQ4K1yA='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.coingecko.com https://*.instantdb.com wss://*.instantdb.com https://open.er-api.com; img-src 'self' data: blob:; frame-ancestors 'none'"
         },
         {
           "key": "X-Content-Type-Options",

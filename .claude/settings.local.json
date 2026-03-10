@@ -15,7 +15,13 @@
       "Bash(npx tsc --noEmit --esModuleInterop --moduleResolution node --module esnext --target es2022 api/quote.ts api/yf-search.ts)",
       "Bash(git status -u)",
       "Bash(git add .gitignore .env.example package.json package-lock.json vite.config.ts vercel.json instant.perms.ts api/quote.ts api/yf-search.ts src/hooks/useAssetPrices.ts src/components/modals/HoldingModal.tsx src/pages/Login.tsx src/utils/export.ts)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git add src/pages/Budgets.tsx src/pages/Categories.tsx)",
+      "Bash(grep -r \"MISSING_APP_ID\" dist/assets/*.js)",
+      "Bash(grep -l \"MISSING_APP_ID\\\\|91618de1\" dist/assets/*.js)",
+      "Bash(xxd /Users/christianmoore/Documents/claude/fintrack/.env)",
+      "Bash(npx vite build)",
+      "Bash(grep -r \"MISSING_APP_ID\\\\|91618de1\" /Users/christianmoore/Documents/claude/fintrack/dist/assets/*.js)"
     ]
   }
 }
